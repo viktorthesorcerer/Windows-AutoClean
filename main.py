@@ -1,46 +1,42 @@
 import os
 import shutil
-import time
 
-# List of folders to clean
+# List of folders/files to clean
 folders_to_clean = [
-    "%TEMP%",
-    "%APPDATA%\Local\Temp",
-    "C:\Windows\Temp",
-    "C:\Windows\SoftwareDistribution\Download",
-    "C:\Windows\Prefetch",
-    "C:\Windows\Logs",
-    "C:\Windows\Memory.dmp"
+    r"%TEMP%",
+    r"%APPDATA%\Local\Temp",
+    r"C:\Windows\Temp",
+    r"C:\Windows\SoftwareDistribution\Download",
+    r"C:\Windows\Prefetch",
+    r"C:\Windows\Logs",
+    r"C:\Windows\Memory.dmp"  # <- esse é arquivo, não pasta
 ]
 
-# Expand environment variables in the list of folders
-folders_to_clean = [os.path.expandvars(folder) for folder in folders_to_clean]
+# Expand environment variables
+folders_to_clean = [os.path.expandvars(path) for path in folders_to_clean]
 
-# Iterate over the list of folders
-for folder in folders_to_clean:
-    # Check if the folder exists
-    if os.path.exists(folder):
-        # Delete the contents of the folder
-        for filename in os.listdir(folder):
-            filepath = os.path.join(folder, filename)
-            if os.path.isdir(filepath):
+for path in folders_to_clean:
+    if os.path.exists(path):
+        if os.path.isdir(path):
+            # Se for pasta, limpa conteúdo
+            for filename in os.listdir(path):
+                filepath = os.path.join(path, filename)
                 try:
-                    shutil.rmtree(filepath)
+                    if os.path.isdir(filepath):
+                        shutil.rmtree(filepath)
+                    else:
+                        os.remove(filepath)
                 except PermissionError:
-                    # Print a message if the folder cannot be deleted
-                    print(f"Unable to delete folder {filepath} because it is in use.")
-            else:
-                # Try deleting the file
-                try:
-                    os.remove(filepath)
-                except PermissionError:
-                    # Skip the file if it is in use
-                    continue
-
-        # Print a message if the folder was cleaned
-        print(f"{folder} was cleaned.")
+                    print(f"Unable to delete {filepath} (in use).")
+            print(f"{path} was cleaned.")
+        else:
+            # Se for arquivo, tenta remover direto
+            try:
+                os.remove(path)
+                print(f"File {path} was deleted.")
+            except PermissionError:
+                print(f"Unable to delete file {path} (in use).")
     else:
-        # Print a message if the folder does not exist
-        print(f"{folder} does not exist.")
+        print(f"{path} does not exist.")
 
 print("Done!")
